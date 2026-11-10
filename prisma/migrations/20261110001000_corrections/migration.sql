@@ -1,0 +1,1 @@
+CREATE TABLE "Correction" ("id" TEXT NOT NULL,"studyId" TEXT NOT NULL,"authorId" TEXT NOT NULL,"baseVersionId" TEXT NOT NULL,"proposed" JSONB NOT NULL,"status" TEXT NOT NULL DEFAULT 'submitted',"note" TEXT NOT NULL DEFAULT '',"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "Correction_pkey" PRIMARY KEY ("id"));

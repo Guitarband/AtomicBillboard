@@ -1,0 +1,2 @@
+"use client"; import {useState} from "react";import {api} from "../../../lib/trpc-client";
+export function ShareButton({id}:{id:string}){const [text,setText]=useState("");return <div><button onClick={async()=>{try{const share=await api.share.mutate({id});const url=window.location.origin+"/s/"+share.token;setText(url);try{await navigator.clipboard.writeText(url)}catch{}}catch{setText("Sign in with a verified account to create a share link.")}}}>Create share link</button>{text&&<p role="status">{text}</p>}</div>}

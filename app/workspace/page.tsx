@@ -1,0 +1,3 @@
+import {headers} from "next/headers";import Link from "next/link";import {auth} from "../../lib/auth";import {db} from "../../lib/db";import {Organisations} from "./organisations";import {Workspace} from "./workspace";
+export const dynamic="force-dynamic";
+export default async function Page(){const session=await auth.api.getSession({headers:await headers()});if(!session?.user.emailVerified)return <main className="content"><h1>Workspace</h1><p><Link href="/account">Sign in</Link> with a verified work email to continue.</p></main>;const user=await db.user.findUnique({where:{id:session.user.id}});return <main className="content"><h1>Workspace</h1><p>{session.user.email}</p><Organisations/><Workspace role={user?.role||"reader"}/></main>}

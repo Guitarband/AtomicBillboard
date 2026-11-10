@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id
+  name String
+  email String @unique
+  emailVerified Boolean @default(false)
+  image String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions Session[]
+  accounts Account[]
+  role String @default("reader")
+  memberships OrganisationMember[]
+  applications PublisherApplication[]
+  studies CaseStudy[]
+  visits Visit[]
+  shares Share[] @relation("Sharer")
+  referrals Referral[] @relation("Recipient")
+}
+model Session {
+  id String @id
+  expiresAt DateTime
+  token String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model Account {
+  id String @id
+  accountId String
+  providerId String
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken String?
+  refreshToken String?
+  idToken String?
+  accessTokenExpiresAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope String?
+  password String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Verification {
+  id String @id
+  identifier String
+  value String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model ApprovedDomain {
+  domain String @id
+  createdAt DateTime @default(now())
+}
+model PublisherApplication {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  organisation String
+  details String
+  status String @default("pending")
+  createdAt DateTime @default(now())
+}
+model CaseStudy {
+  id String @id @default(cuid())
+  authorId String
+  author User @relation(fields: [authorId], references: [id])
+  title String
+  summary String
+  industry String
+  technology String
+  narrative String
+  limitations String
+  sourceUrl String
+  rightsAttested Boolean @default(false)
+  status String @default("draft")
+  reviewNote String @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  steps Step[]
+  attachments Attachment[]
+  versions PublishedVersion[]
+  visits Visit[]
+  shares Share[]
+}
+model Step {
+  id String @id @default(cuid())
+  studyId String
+  study CaseStudy @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  position Int
+  title String
+  description String
+  sourceUrl String
+}
+model PublishedVersion {
+  id String @id @default(cuid())
+  studyId String
+  study CaseStudy @relation(fields: [studyId], references: [id])
+  snapshot Json
+  publishedAt DateTime @default(now())
+}
+model AuditEvent {
+  id String @id @default(cuid())
+  actorId String
+  action String
+  targetId String
+  details String @default("")
+  createdAt DateTime @default(now())
+}
+model Visit {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  studyId String
+  study CaseStudy @relation(fields: [studyId], references: [id])
+  visitedAt DateTime @default(now())
+}
+model Share {
+  id String @id @default(cuid())
+  token String @unique
+  sharerId String
+  sharer User @relation("Sharer", fields: [sharerId], references: [id])
+  studyId String
+  study CaseStudy @relation(fields: [studyId], references: [id])
+  createdAt DateTime @default(now())
+  referrals Referral[]
+}
+model Referral {
+  id String @id @default(cuid())
+  shareId String
+  share Share @relation(fields: [shareId], references: [id])
+  recipientId String
+  recipient User @relation("Recipient", fields: [recipientId], references: [id])
+  accessedAt DateTime
+  attributedAt DateTime @default(now())
+  @@unique([shareId, recipientId])
+}
+
+model ShareLanding {
+  id String @id @default(cuid())
+  shareId String
+  accessedAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model Attachment {
+  id String @id @default(cuid())
+  studyId String
+  study CaseStudy @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  name String
+  content Bytes
+  createdAt DateTime @default(now())
+}
+
+model Correction {
+  id String @id @default(cuid())
+  studyId String
+  authorId String
+  baseVersionId String
+  proposed Json
+  status String @default("submitted")
+  note String @default("")
+  createdAt DateTime @default(now())
+}
+
+model Organisation {
+  id String @id @default(cuid())
+  name String
+  members OrganisationMember[]
+  createdAt DateTime @default(now())
+}
+model OrganisationMember {
+  id String @id @default(cuid())
+  organisationId String
+  organisation Organisation @relation(fields:[organisationId], references:[id], onDelete:Cascade)
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  role String @default("contributor")
+  createdAt DateTime @default(now())
+  @@unique([organisationId,userId])
+}
