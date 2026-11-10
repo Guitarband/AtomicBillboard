@@ -6,6 +6,9 @@ import { db } from "./db";
 import { emailDomain } from "./email-policy.mjs";
 
 export const auth = betterAuth({
+  baseURL: process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.BETTER_AUTH_URL,
   database: prismaAdapter(db, { provider: "postgresql", transaction: true }),
   emailAndPassword: { enabled: true, requireEmailVerification: true, minPasswordLength: 12, revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {

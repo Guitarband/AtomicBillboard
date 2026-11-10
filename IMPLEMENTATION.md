@@ -1,6 +1,7 @@
 # MVP setup and status
 
 1. Create a PostgreSQL database. Copy .env.example to .env and set DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, RESEND_API_KEY and EMAIL_FROM. The sender must be authorised by Resend.
+   On Vercel, Better Auth uses the HTTPS deployment URL from VERCEL_URL when system environment variables are exposed; otherwise it uses BETTER_AUTH_URL. VERCEL_URL is a deployment-specific hostname, not necessarily the production or custom-domain URL. Better Auth trusts its configured base URL by default, so other hostnames may require explicit trusted-origin configuration.
 2. Run npm install, npm run db:generate, and npx prisma migrate deploy.
 3. Add approved organisation domains to ApprovedDomain after reviewing them. Public providers are blocked, but the list cannot cover every provider; review every approval.
 4. Register and verify an approved work account. A database administrator must bootstrap an editor by changing that verified user's role to editor. Editors approve publisher applications. Approval creates an organisation and makes the applicant its administrator; administrators can add already verified accounts.
