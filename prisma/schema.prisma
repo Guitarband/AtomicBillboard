@@ -189,3 +189,79 @@ model OrganisationMember {
   createdAt DateTime @default(now())
   @@unique([organisationId,userId])
 }
+
+/// Business Area in the master file, presented as a sector in the explorer.
+model BusinessArea {
+  name        String       @id
+  departments Department[]
+}
+
+/// Department names are scoped to their business area.
+model Department {
+  businessArea String
+  name         String
+  sector       BusinessArea  @relation(fields: [businessArea], references: [name], onUpdate: Cascade)
+  roles        RolePackage[]
+
+  @@id([businessArea, name])
+}
+
+/// The source package ID identifies one graded role independently of its title.
+model RolePackage {
+  rolePackageId    String     @id
+  businessArea     String
+  department       String
+  roleFamily       String?
+  levelledTitle    String
+  jobGrade         String?
+  gradeDescription String?
+  domain           Department @relation(fields: [businessArea, department], references: [businessArea, name], onUpdate: Cascade)
+  tasks            RoleTask[]
+
+  @@index([businessArea, department, levelledTitle])
+}
+
+model RoleTask {
+  rolePackageId String
+  taskId        String
+  title         String
+  position      Int
+  role          RolePackage   @relation(fields: [rolePackageId], references: [rolePackageId], onDelete: Cascade)
+  subtasks      RoleSubtask[]
+
+  @@id([rolePackageId, taskId])
+}
+
+model RoleSubtask {
+  rolePackageId String
+  taskId        String
+  subtaskId     String
+  title         String
+  position      Int
+  task          RoleTask     @relation(fields: [rolePackageId, taskId], references: [rolePackageId, taskId], onDelete: Cascade)
+  atomicTasks   AtomicTask[]
+
+  @@id([rolePackageId, taskId, subtaskId])
+}
+
+model AtomicTask {
+  rolePackageId        String
+  taskId               String
+  subtaskId            String
+  atomicId             String
+  title                String
+  position             Int
+  sfiaLevel            String?
+  automationPropensity String?
+  humanInvolvement     String?
+  workResult           String?
+  evidence             String?
+  controlQuality       String?
+  riskIfFailed         String?
+  actionType           String?
+  recordBasis          String?
+  validationStatus     String?
+  subtask              RoleSubtask @relation(fields: [rolePackageId, taskId, subtaskId], references: [rolePackageId, taskId, subtaskId], onDelete: Cascade)
+
+  @@id([rolePackageId, taskId, subtaskId, atomicId])
+}

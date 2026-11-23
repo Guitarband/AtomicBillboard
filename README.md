@@ -1,6 +1,6 @@
-# Case Intelligence Platform
+# Atomic Studies
 
-> **Working title · Product concept / pre-development**
+> **Product concept / pre-development**
 >
 > **Discover what organisations implemented, how they implemented it, and what actually happened.**
 
@@ -8,7 +8,7 @@ A business-to-business (B2B) case-study publishing and research platform that tu
 
 The initial focus is **enterprise AI and automation**. The long-term goal is a reusable body of *execution intelligence*: not simply which technologies are promising, but which tasks, dependencies, trade-offs, constraints, and decisions show up in real implementations.
 
-**Status:** This README defines a proposed product. Features, architecture, data models, milestones, and business models are plans—not claims of an existing implementation. The project name is a placeholder.
+**Status:** This README defines the original product concept. See [implementation notes](IMPLEMENTATION.md) for the current application.
 
 ---
 

@@ -1,3 +1,24 @@
-import type {Metadata} from "next"; import Link from "next/link"; import {Attribution} from "./attribution"; import "./style.css";
-export const metadata:Metadata={title:"Case Intelligence",description:"Explore how organisations implement technology."};
-export default function Layout({children}:{children:React.ReactNode}){return <html lang="en"><body><Attribution/><header><Link className="brand" href="/">Case Intelligence</Link><nav><Link href="/cases">Case studies</Link><Link href="/workspace">Workspace</Link><Link href="/account">Sign in</Link></nav></header>{children}<footer>Case Intelligence <span>Implementation evidence, made useful. <Link href="/privacy">Privacy and tracking</Link></span></footer></body></html>}
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Attribution } from "./attribution";
+import { SiteHeader } from "./site-header";
+import "./style.css";
+
+export const metadata: Metadata = {
+  title: "Atomic Studies",
+  applicationName: "Atomic Studies",
+  description: "Explore how roles break down into tasks and how organisations put technology to work.",
+  icons: { icon: "/atomic-mark.svg" },
+};
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return <html lang="en"><body>
+    <Attribution />
+    <SiteHeader />
+    {children}
+    <footer className="site-footer"><div className="site-footer-inner">
+      <Link className="footer-brand" href="/">Atomic Studies</Link>
+      <Link href="/privacy">Privacy and tracking</Link>
+    </div></footer>
+  </body></html>;
+}

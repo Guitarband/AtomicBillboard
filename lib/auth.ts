@@ -6,6 +6,7 @@ import { db } from "./db";
 import { emailDomain } from "./email-policy.mjs";
 
 export const auth = betterAuth({
+  appName: "Atomic Studies",
   baseURL: process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : process.env.BETTER_AUTH_URL,

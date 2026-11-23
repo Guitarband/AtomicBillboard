@@ -8,6 +8,19 @@
 5. Schedule node scripts/cleanup-tracking.cjs daily. It deletes expired referral landings and visit/referral records older than 90 days. The application does not install a scheduler.
 6. Run npm test and npm run build. Test reset-email delivery, session revocation, publisher/editor permissions, uploads, concurrent publication and share attribution against a dedicated test database before use.
 
+## Role explorer
+
+Open `/` to choose an industry, department and role, one decision at a time. Select an earlier choice in the breadcrumb to change it. Map and Outline show the role’s tasks, subtasks and atomic steps. Open `/?sample=1` for the five fictional roles in [the sample CSV](prisma/sample-roles.csv).
+
+1. Export the master sheet as UTF-8 CSV with the 23 headers shown in the sample. Each row describes one atomic step. The explorer is public, so import records intended for visitors.
+2. Point `DATABASE_URL` at the intended PostgreSQL database and run `npx prisma migrate deploy`.
+3. Run `npm run db:generate` followed by `npm run catalog:import -- "path/to/master.csv"`.
+4. Open `/`. Choose a role and select an atomic step to inspect its evidence, human involvement, controls and validation status.
+
+**Column mapping.** Business Area supplies the industry and Department supplies the department. Existing explorer links use `sector` and `domain` for these selections. The levelled role title is the displayed role. Role package ID identifies it across imports and gives future role-level analysis a stable reference. Task, subtask and atomic IDs are scoped to their parents. Grades, indicative SFIA levels and automation estimates retain the source text, including ranges. Blank optional fields stay empty.
+
+**Import behaviour.** The importer validates the file before writing and commits one role at a time. Re-importing the same identifiers updates matching records and preserves records omitted from the file. Order within each task and subtask follows the CSV. An empty catalogue opens the labelled sample. A connection failure on the homepage is labelled, and saved live role links show an availability message if the database is offline.
+
 ## Limits
 
 - The new migrations, email delivery and database-backed workflows have not been tested end to end in this environment. Do not deploy as production-ready without that testing.
