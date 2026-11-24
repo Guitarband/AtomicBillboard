@@ -41,15 +41,22 @@ function splitTitle(title: string, radius: number) {
 
 export function TaskExplorer({ tasks }: { tasks: Task[] }) {
   if (!tasks.length) return <p className="catalogue-message">This role has no tasks yet.</p>;
-  return <TaskWorkspace tasks={tasks} />;
+  const subtasks = tasks.flatMap(task => task.children ?? []);
+  const stepCount = subtasks.reduce((total, subtask) => total + (subtask.children?.length ?? 0), 0);
+  return <>
+    <header className="index-heading">
+      <h2>Task index</h2>
+      <p>{tasks.length} {tasks.length === 1 ? "task" : "tasks"} <span>·</span> {subtasks.length} {subtasks.length === 1 ? "subtask" : "subtasks"} <span>·</span> {stepCount} atomic {stepCount === 1 ? "step" : "steps"}</p>
+    </header>
+    <TaskWorkspace tasks={tasks} />
+  </>;
 }
 
 function TaskWorkspace({ tasks }: { tasks: Task[] }) {
   const [expanded, setExpanded] = useState(() => new Set<string>());
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(tasks[0].id);
   const compact = useSyncExternalStore(subscribeToWidth, () => window.matchMedia(compactScreen).matches, () => false);
-  const [preferredView, setMode] = useState<"map" | "list" | null>(null);
-  const mode = preferredView ?? (compact || tasks.length > 8 ? "list" : "map");
+  const [mode, setMode] = useState<"map" | "list">("list");
   const [zoom, setZoom] = useState(1);
   const [mobileDetail, setMobileDetail] = useState(false);
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
@@ -125,7 +132,7 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
 
   function reset() {
     setExpanded(new Set());
-    setSelectedId(null);
+    setSelectedId(tasks[0].id);
     setPositions({});
     setZoom(1);
     setMobileDetail(false);
@@ -153,7 +160,7 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
     } }));
   }
 
-  return <div className="work-map" data-mobile-detail={mobileDetail}>
+  return <div className="work-map" data-view={mode} data-mobile-detail={mobileDetail}>
     <section ref={panel} className="map-panel" aria-label="Role tasks">
       <div className="map-toolbar">
         <div className="view-switch" role="group" aria-label="Task view">
@@ -247,9 +254,12 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
       </button>}
       {selected.children && <div className="detail-section">
         <h3>{selected.level === "High-level task" ? "Subtasks" : "Atomic steps"} <span>{selected.children.length}</span></h3>
-        {selected.children.length ? <ul className="detail-children">{selected.children.map(child =>
-          <li key={child.id}><button type="button" onClick={() => openChild(selected, child)}>{child.title}<span aria-hidden="true">›</span></button></li>
-        )}</ul> : <p>No steps recorded.</p>}
+        {selected.children.length ? <ol className="work-sequence" aria-label={selected.level === "Subtask" ? "Atomic steps" : "Subtasks"}>{selected.children.map((child, index) =>
+          <li key={child.id}><button type="button" onClick={() => openChild(selected, child)}>
+            <span className="work-position" aria-hidden="true">{index + 1}</span><strong>{child.title}</strong>
+            {child.children && <small>{child.children.length} atomic {child.children.length === 1 ? "step" : "steps"}</small>}
+          </button></li>
+        )}</ol> : <p>No steps recorded.</p>}
       </div>}
       {selected.atomic && <AtomicDetails task={selected.atomic} />}
       </div>
@@ -262,16 +272,22 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
 }
 
 function AtomicDetails({ task }: { task: NonNullable<Task["atomic"]> }) {
-  const fields = [
-    ["Work result", task.workResult], ["Evidence", task.evidence],
-    ["Human involvement", task.humanInvolvement], ["Automation potential (estimate)", task.automationPropensity],
-    ["Quality checks", task.controlQuality], ["Risk if the step fails", task.riskIfFailed],
-    ["SFIA level (indicative)", task.sfiaLevel], ["Action type", task.actionType],
-    ["Record basis", task.recordBasis], ["Validation status", task.validationStatus],
-  ].filter(([, value]) => value);
-  return fields.length ? <dl className="atomic-fields">{fields.map(([label, value]) =>
-    <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
-  )}</dl> : <p>No further details have been recorded for this step.</p>;
+  const overview = [["Work result", task.workResult], ["Human involvement", task.humanInvolvement], ["Automation potential (estimate)", task.automationPropensity]];
+  const groups = [
+    { label: "Evidence and controls", fields: [["Evidence", task.evidence], ["Quality checks", task.controlQuality], ["Risk if the step fails", task.riskIfFailed]] },
+    { label: "Classification and source", fields: [["SFIA level (indicative)", task.sfiaLevel], ["Action type", task.actionType], ["Record basis", task.recordBasis], ["Validation status", task.validationStatus]] },
+  ];
+  function facts(fields: (string | null)[][]) {
+    const recorded = fields.filter(([, value]) => value);
+    return recorded.length ? <dl className="atomic-fields">{recorded.map(([label, value]) =>
+      <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : null;
+  }
+  const summary = facts(overview);
+  const sections = groups.filter(group => group.fields.some(([, value]) => value));
+  if (!summary && !sections.length) return <p>No further details have been recorded for this step.</p>;
+  return <>{summary}{sections.map(group => <details key={group.label} className="record-section">
+    <summary>{group.label}</summary>{facts(group.fields)}
+  </details>)}</>;
 }
 
 type ListProps = {
@@ -289,3 +305,4 @@ function TaskList({ items, expanded, selectedId, onSelect, onToggle }: ListProps
     {task.children && expanded.has(task.id) && <TaskList items={task.children} expanded={expanded} selectedId={selectedId} onSelect={onSelect} onToggle={onToggle} />}
   </li>)}</ul>;
 }
+

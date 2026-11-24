@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const sections = [
-  { href: "/", label: "Explore roles" },
+  { href: "/", label: "Dashboard" },
   { href: "/cases", label: "Case studies" },
   { href: "/workspace", label: "Workspace" },
 ];
@@ -13,9 +13,9 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return <header className="site-header"><div className="site-header-inner">
-    <Link className="site-brand" href="/" aria-label="Atomic Studies home">
+    <Link className="site-brand" href="/" aria-label="Atomic Billboard home">
       <span aria-hidden="true" className="site-mark" />
-      Atomic Studies
+      Atomic Billboard
     </Link>
     <nav className="site-nav" aria-label="Main navigation">
       {sections.map(({ href, label }) => {

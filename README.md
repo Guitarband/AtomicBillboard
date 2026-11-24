@@ -1,4 +1,4 @@
-# Atomic Studies
+# Atomic Billboard
 
 > **Product concept / pre-development**
 >

@@ -38,32 +38,48 @@ function IndustryOption({ option }: { option: Option }) {
   </Link>;
 }
 
-export function CatalogueChoices({ options, step }: { options: Option[]; step: number }) {
+function groupChoices(items: Option[], keyFor: (item: Option) => string) {
+  const groups = new Map<string, Option[]>();
+  for (const item of items) {
+    const key = keyFor(item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(item);
+  }
+  return [...groups].sort(([a], [b]) => a.localeCompare(b));
+}
+
+export function CatalogueChoices({ options, step, sector }: { options: Option[]; step: number; sector?: string }) {
   const [filter, setFilter] = useState("");
+  const [limit, setLimit] = useState(8);
   const query = filter.trim().toLowerCase();
-  const titleCounts = new Map<string, number>();
-  for (const item of options) titleCounts.set(item.title, (titleCounts.get(item.title) ?? 0) + 1);
-  const visible = options.filter(item => !query || [item.title, item.family, item.detail].some(field => field?.toLowerCase().includes(query)));
-  const noun = step === 1 ? (visible.length === 1 ? "industry" : "industries") : step === 2 ? (visible.length === 1 ? "department" : "departments") : (visible.length === 1 ? "role" : "roles");
-  return <section className="choices-section" aria-labelledby="decision-title">
+  const visible = options.filter(item => [item.title, item.family, item.detail, item.value].some(field => field?.toLowerCase().includes(query)));
+  if (step === 1) return <section className="choices-section" aria-labelledby="decision-title">
+    <div className="choices-toolbar"><span className="choice-count">{options.length} industries</span></div>
+    <ul id="catalogue-choices" className="industry-choices">{options.map(option =>
+      <li key={option.value}><IndustryOption option={option}/></li>)}</ul>
+  </section>;
+  const departments = step === 2;
+  const groups = groupChoices(visible, item => departments ? item.title.slice(0, 1).toUpperCase() : item.family || item.title);
+  const noun = departments ? "department" : "role profile";
+  const directory = <div className="catalogue-directory">
     <div className="choices-toolbar">
-      <span className="choice-count" role="status">{visible.length} {noun}</span>
-      {step === 3 && options.length > 1 && <label className="role-filter">
-        <span className="visually-hidden">Find a role by title, family, grade or ID</span>
-        <input type="search" placeholder="Search by title, family, grade or ID" value={filter} onChange={event => setFilter(event.target.value)} aria-controls="catalogue-choices" />
+      <span className="choice-count" role="status">{visible.length} {noun}{visible.length !== 1 && "s"}</span>
+      {options.length > 1 && <label className="role-filter">
+        <span className="visually-hidden">{departments ? "Find a department" : "Find a role by title, family, grade or ID"}</span>
+        <input type="search" placeholder={departments ? "Find a department" : "Search by title, family, grade or ID"} value={filter}
+          onChange={event => {setFilter(event.target.value); setLimit(8)}} aria-controls="catalogue-choices"/>
       </label>}
     </div>
-    <ul id="catalogue-choices" className={step === 1 ? "industry-choices" : "directory-choices"}>{visible.map(choice =>
-      <li key={choice.value}>{step === 1 ? <IndustryOption option={choice} /> :
-        <Link href={choice.href} prefetch={false}>
-          <span className="choice-copy"><strong>{choice.title}</strong>{choice.description && <span>{choice.description}</span>}</span>
-          <span className="choice-meta">{step === 3
-            ? [choice.family, choice.grade, titleCounts.get(choice.title)! > 1 && choice.value].filter(Boolean).join(" · ")
-            : choice.detail}</span>
-          <ChoiceArrow />
-        </Link>}
-      </li>
-    )}</ul>
-    {!visible.length && <p className="no-matches">No roles match “{filter}”. <button type="button" className="link" onClick={() => setFilter("")}>Clear search</button></p>}
-  </section>;
+    <div id="catalogue-choices">{(departments ? groups : groups.slice(0,limit)).map(([key,items]) => departments ?
+      <div className="department-letter" key={key}><span aria-hidden="true">{key}</span><ul>{items.map(item =>
+        <li key={item.value}><Link href={item.href} prefetch={false}><strong>{item.title}</strong><small>{item.detail}</small></Link></li>)}</ul></div> :
+      <details className="family-entry" key={key} name="role-families"><summary>{key}<small>{items.length} {items.length === 1 ? "profile" : "profiles"}</small></summary>
+        <ul>{items.map(item => <li key={item.value}><Link href={item.href} prefetch={false}><strong>{item.title}</strong>
+          <small>{[item.grade && "Grade " + item.grade, item.value].filter(Boolean).join(" · ")}</small></Link>
+          {item.description && <p>{item.description}</p>}</li>)}</ul></details>)}</div>
+    {!departments && groups.length > limit && <button className="link directory-more" onClick={()=>setLimit(limit+8)}>Show more role families ({groups.length-limit} remaining)</button>}
+    {!visible.length && <p>No matching {noun}s. <button className="link" onClick={()=>setFilter("")}>Clear search</button></p>}
+  </div>;
+  return <section className="choices-section" aria-labelledby="decision-title">{departments ?
+    <div className="department-spread"><aside><IndustryArt name={sector || ""} active={false}/><strong>{sector}</strong></aside>{directory}</div> : directory}</section>;
 }

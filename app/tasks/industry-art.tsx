@@ -1,18 +1,31 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { bankingMotifs, drawBankingObject, type Ink, type ObjectMotif } from "./banking-art";
 
-type Motif = "coins" | "gears" | "freight" | "blocks";
+type Palette = "coins" | "gears" | "freight" | "blocks";
+type Motif = Palette | ObjectMotif;
 type Point = [number, number];
-type Ink = { paper: string; light: string; mid: string; dark: string; line: string };
-const inks: Record<Motif, Ink> = {
+const inks: Record<Palette, Ink> = {
   coins: { paper: "#dce9da", light: "#e8f2dc", mid: "#9dbda0", dark: "#74967f", line: "#315b49" },
   gears: { paper: "#f4e8cd", light: "#fcf1d1", mid: "#d9b77d", dark: "#b78b55", line: "#705230" },
   freight: { paper: "#dce9ec", light: "#e7f2f0", mid: "#9ebfc5", dark: "#6c969f", line: "#355c66" },
   blocks: { paper: "#e6e6ee", light: "#f0eff5", mid: "#b7b7cd", dark: "#989ab6", line: "#505573" },
 };
+const paletteByObject: Record<ObjectMotif, Palette> = {
+  vault: "coins", briefcase: "gears", atm: "freight", headset: "blocks",
+  compass: "gears", columns: "blocks", market: "coins", terminal: "freight",
+  sprout: "coins", balance: "gears", database: "freight",
+};
+function inkFor(motif: Motif) {
+  if (motif === "coins" || motif === "gears" || motif === "freight" || motif === "blocks") return inks[motif];
+  return inks[paletteByObject[motif]];
+}
+const byIndustry = new Map<string, Motif>(Object.entries(bankingMotifs));
 
 function motifFor(name: string): Motif {
+  const exact = byIndustry.get(name.trim().toLowerCase());
+  if (exact) return exact;
   if (/financ|bank|insur/i.test(name)) return "coins";
   if (/manufactur|industrial|engineer/i.test(name)) return "gears";
   if (/transport|logistic|freight/i.test(name)) return "freight";
@@ -20,7 +33,7 @@ function motifFor(name: string): Motif {
 }
 
 function draw(ctx: CanvasRenderingContext2D, motif: Motif, t: number) {
-  const ink = inks[motif];
+  const ink = inkFor(motif);
   ctx.clearRect(0, 0, 360, 190);
   ctx.lineJoin = "round";
   ctx.lineWidth = 1.15;
@@ -109,12 +122,12 @@ function draw(ctx: CanvasRenderingContext2D, motif: Motif, t: number) {
     box(-62, -43, 0, 89, 31, 29, true);
     box(-62, -43, 30 + t * 8, 89, 31, 29, true);
     box(-44, -8, 0, 89, 31, 29, true);
-  } else {
+  } else if (motif === "blocks") {
     box(-35, -42, 0, 39, 39, 64 + t * 6, false);
     box(8, -42, 0, 39, 39, 37, false);
     box(-35, 1, 0, 39, 39, 38, false);
     box(8, 1, 0, 39, 39, 20, false);
-  }
+  } else drawBankingObject(ctx, motif, t, ink);
 }
 
 export function IndustryArt({ name, active }: { name: string; active: boolean }) {
@@ -141,7 +154,7 @@ export function IndustryArt({ name, active }: { name: string; active: boolean })
     paint(start);
     return () => cancelAnimationFrame(frame);
   }, [active, motif]);
-  return <span className="industry-art" style={{ backgroundColor: inks[motif].paper }} aria-hidden="true">
+  return <span className="industry-art" style={{ backgroundColor: inkFor(motif).paper }} aria-hidden="true">
     <canvas ref={canvas} width="360" height="190" />
   </span>;
 }

@@ -196,6 +196,16 @@ model BusinessArea {
   departments Department[]
 }
 
+/// Original worksheet rows, including repeated records, keyed by their location in the workbook.
+model AtomicTaskSourceRow {
+  workbook  String
+  sheet     String
+  sourceRow Int
+  fields    Json
+
+  @@id([workbook, sheet, sourceRow])
+}
+
 /// Department names are scoped to their business area.
 model Department {
   businessArea String

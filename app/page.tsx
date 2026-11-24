@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Dashboard } from "./insights/dashboard";
 import { browseCatalogue, catalogueHref, type Trail } from "../lib/catalogue/browse";
 import { roleTaskTree } from "./tasks/data";
 import { CatalogueChoices, StepFrame } from "./tasks/catalogue-choices";
 import { TaskExplorer } from "./tasks/task-explorer";
 import "./tasks/tasks.css";
+import "./tasks/role-index.css";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Role explorer | Atomic Studies",
+  title: "Research dashboard & role explorer | Atomic Billboard",
   description: "Explore the responsibilities, evidence and decisions behind a business role.",
 };
 
@@ -31,6 +33,7 @@ function SelectionTrail({ trail, sample }: { trail: Trail; sample: boolean }) {
 
 export default async function Home({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
+  if (!params.sector && !params.domain && !params.role && !params.sample && !params.explore) return <Dashboard />;
   const { sector, domain, role: roleId } = params;
   const sampleRequested = params.sample === "1";
   if (Array.isArray(sector) || Array.isArray(domain) || Array.isArray(roleId) || (domain && !sector) || (roleId && !domain)) {
@@ -63,7 +66,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Par
           <h1 id="decision-title" tabIndex={-1}>{prompt}</h1>
           {(!sector || domain) && <p>{domain ? "Select a role to open its work map." : "Find out what different roles do day to day."}</p>}
         </div>
-        <CatalogueChoices key={signature} step={step} options={view.choices.map(choice => {
+        <CatalogueChoices key={signature} step={step} sector={sector} options={view.choices.map(choice => {
           const next = !sector ? { sector: choice.value } : !domain ? { sector, domain: choice.value } : { sector, domain, role: choice.value };
           return { ...choice, href: catalogueHref(next, sample) };
         })} />
@@ -79,6 +82,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<Par
             <div><dt>Role ID</dt><dd>{role.rolePackageId}</dd></div>
           </dl>
         </div>
+        <nav className="role-tools" aria-label="Role research tools">{[["scores","Role scoring"],["impact","Model adoption"],["pay","Compare salaries"]].map(([id,label])=>
+          <Link key={id} href={"/insights/"+id+"?"+new URLSearchParams({role:role.rolePackageId,...(sample?{sample:"1"}:{})})}>{label} ↗</Link>)}</nav>
         <TaskExplorer key={role.rolePackageId} tasks={roleTaskTree(role)} />
       </>}
     </StepFrame>

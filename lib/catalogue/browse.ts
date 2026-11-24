@@ -18,7 +18,7 @@ export function catalogueHref(trail: Trail = {}, sample = false) {
   if (trail.domain) params.set("domain", trail.domain);
   if (trail.role) params.set("role", trail.role);
   if (sample) params.set("sample", "1");
-  return params.size ? `/?${params}` : "/";
+  return params.size ? `/?${params}` : "/?explore=1";
 }
 
 function groupChoice(name: string, count: number, unit: string): Choice {
