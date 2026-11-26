@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Coverage } from "./coverage";
+import { LeadingDepartments } from "./coverage";
 import Link from "next/link";
 import { ShortlistLink } from "../shortlist/controls";
 import { toolsIndex } from "../../lib/intelligence/model";
@@ -13,7 +13,6 @@ export function Dashboard() {
       <nav aria-label="Catalogue shortcuts"><ShortlistLink/></nav>
     </header>
     <div className="catalogue-entry"><IllustratedChoice title="Explore roles and departments" href="/?explore=1" illustration="Banking operations" description="Choose an industry, find a department and open a role’s task map."/></div>
-    <Suspense fallback={<p className="coverage-loading" role="status">Loading catalogue coverage…</p>}><Coverage/></Suspense>
     <div className="dashboard-desk"><TopicDesk/>
       <section className="research-tools"><h2>Research tools</h2>
         {toolsIndex.map(([id, name, desc]) => <Link prefetch={false} key={id} href={"/insights/" + id}>
@@ -21,5 +20,6 @@ export function Dashboard() {
         </Link>)}
       </section>
     </div>
+    <Suspense fallback={<p role="status">Loading leading departments…</p>}><LeadingDepartments/></Suspense>
   </main>;
 }

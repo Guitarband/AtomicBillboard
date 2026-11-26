@@ -1,3 +1,4 @@
+import { ToolDirectory } from "../tool-directory";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { catalogue } from "../../../lib/intelligence/catalogue";
@@ -57,20 +58,10 @@ export default async function Research({
     : [];
   const selected = options.find((r) => r.id === chosen?.id);
   return (
-    <main className="intel">
-      <div className="tool-layout"><aside className="tool-directory"><Link href="/">Research dashboard</Link>
-      <nav className="intel-tabs" aria-label="Research tools">
-        {toolsIndex.map(([id, label]) => (
-          <Link
-            key={id}
-            aria-current={view === id ? "page" : undefined}
-            prefetch={false}
-            href={insightLink(id, scope)}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav></aside><div className="tool-sheet">
+    <main className="intel research-view">
+      <div className="tool-layout">
+        <ToolDirectory current={view} links={toolsIndex.map(([id, label]) => ({id, label, href: insightLink(id, scope)}))}/>
+        <div className="tool-sheet">
       <header className="tool-intro">
         <h1>{tool[1]}</h1>
         <p>{tool[2]}</p>
