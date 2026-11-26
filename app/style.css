@@ -99,3 +99,26 @@
   .site-nav { grid-area: nav; gap: clamp(18px, 6vw, 32px); }
   .site-nav a { min-height: 40px; }
 }
+
+.site-header-inner {max-width:1440px;min-height:50px;padding-inline:clamp(16px,3.5vw,56px)}
+.site-brand {font-size:20px}
+.site-mark {width:28px;height:28px}
+@media(max-width:650px){
+  .site-header-inner {padding-top:5px;row-gap:0}
+  .site-nav a {min-height:32px}
+}
+
+@media (max-width:650px) {
+  .site-nav {gap:4px 12px;justify-content:space-between;flex-wrap:wrap}
+  .site-nav a {font-size:13px}
+}
+
+:root {
+  --report-ink:#172f48;
+  --report-blue:#31577d;
+  --report-wash:#eaf0f6;
+  --report-rule:#c8d2dc;
+  --report-green:#275540;
+}
+.site-header {border-top:3px solid var(--report-ink);border-bottom-color:var(--report-rule)}
+.site-nav a[aria-current] {color:var(--report-ink);border-bottom-color:var(--report-blue)}

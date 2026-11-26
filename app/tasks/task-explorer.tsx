@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
 import type { Task } from "./data";
 import { findTaskPath, layoutTasks } from "./graph-layout";
+import { SaveButton } from "../shortlist/controls";
+import { selectionHref } from "../../lib/catalogue/selection";
 import "./map.css";
 
 const levelNames = { "High-level task": "Task", Subtask: "Subtask", "Atomic task": "Atomic step" };
@@ -39,20 +41,24 @@ function splitTitle(title: string, radius: number) {
   return lines.slice(0, 3);
 }
 
-export function TaskExplorer({ tasks }: { tasks: Task[] }) {
-  if (!tasks.length) return <p className="catalogue-message">This role has no tasks yet.</p>;
+type ExplorerProps = { tasks: Task[]; roleHref: string; initialNode?: string };
+export function TaskExplorer({ tasks, roleHref, initialNode }: ExplorerProps) {
+  if (!tasks.length) return <p className="catalogue-message">{initialNode ? "This selection is no longer available. " : ""}This role has no tasks yet.</p>;
   const subtasks = tasks.flatMap(task => task.children ?? []);
-  const stepCount = subtasks.reduce((total, subtask) => total + (subtask.children?.length ?? 0), 0);
+  const steps = subtasks.flatMap(subtask => subtask.children ?? []);
+  const withControls = steps.filter(step => step.atomic?.controlQuality?.trim()).length;
   return <>
     <header className="index-heading">
       <h2>Task index</h2>
-      <p>{tasks.length} {tasks.length === 1 ? "task" : "tasks"} <span>·</span> {subtasks.length} {subtasks.length === 1 ? "subtask" : "subtasks"} <span>·</span> {stepCount} atomic {stepCount === 1 ? "step" : "steps"}</p>
+      <dl className="task-measures">{Object.entries({
+        Tasks: tasks.length, Subtasks: subtasks.length, "Atomic steps": steps.length, "Steps with controls": withControls,
+      }).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value.toLocaleString("en-US")}</dd></div>)}</dl>
     </header>
-    <TaskWorkspace tasks={tasks} />
+    <TaskWorkspace tasks={tasks} roleHref={roleHref} initialNode={initialNode} />
   </>;
 }
 
-function TaskWorkspace({ tasks }: { tasks: Task[] }) {
+function TaskWorkspace({ tasks, roleHref, initialNode }: ExplorerProps) {
   const [expanded, setExpanded] = useState(() => new Set<string>());
   const [selectedId, setSelectedId] = useState<string | null>(tasks[0].id);
   const compact = useSyncExternalStore(subscribeToWidth, () => window.matchMedia(compactScreen).matches, () => false);
@@ -86,11 +92,34 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
       focusDetails.current = false;
     }
   }, [selectedId, mobileDetail]);
+  const [missing, setMissing] = useState(false);
+  useEffect(() => {
+    let pendingFocus = 0;
+    function restore() {
+      cancelAnimationFrame(pendingFocus);
+      const node = new URLSearchParams(window.location.search).get("node");
+      const trail = node ? findTaskPath(tasks, node) : [];
+      setMissing(!!node && !trail.length);
+      setSelectedId(trail.at(-1)?.id ?? tasks[0].id);
+      setExpanded(new Set(trail.map(item => item.id)));
+      setMobileDetail(!!trail.length && window.matchMedia(compactScreen).matches);
+      if (trail.length) pendingFocus = requestAnimationFrame(() => details.current?.querySelector("h2")?.focus());
+    }
+    restore();
+    window.addEventListener("popstate", restore);
+    return () => { cancelAnimationFrame(pendingFocus); window.removeEventListener("popstate", restore); };
+  }, [tasks, initialNode]);
+  function select(node: string | null) {
+    const href = node ? selectionHref(roleHref, node) : roleHref;
+    if (location.pathname + location.search !== href) history.pushState(null, "", href);
+    setMissing(false);
+    setSelectedId(node ?? tasks[0].id);
+  }
   const coords = new Map(graph.map(node => [node.task.id, positions[node.task.id] ?? node]));
 
   function showDetails(task: Task) {
     focusDetails.current = compact || !!details.current?.contains(document.activeElement);
-    setSelectedId(task.id);
+    select(task.id);
     if (compact) setMobileDetail(true);
   }
 
@@ -106,7 +135,7 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
       showDetails(task);
       return;
     }
-    setSelectedId(task.id);
+    select(task.id);
     setExpanded(previous => {
       const next = new Set(previous);
       if (next.has(task.id)) next.delete(task.id);
@@ -121,7 +150,7 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
       showDetails(task);
       return;
     }
-    setSelectedId(task.id);
+    select(task.id);
     setExpanded(previous => previous.has(task.id) ? previous : new Set([...previous, task.id]));
   }
 
@@ -132,7 +161,7 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
 
   function reset() {
     setExpanded(new Set());
-    setSelectedId(tasks[0].id);
+    select(null);
     setPositions({});
     setZoom(1);
     setMobileDetail(false);
@@ -160,7 +189,7 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
     } }));
   }
 
-  return <div className="work-map" data-view={mode} data-mobile-detail={mobileDetail}>
+  return <>{missing && <p role="status">This selection is no longer available. Showing the role task index.</p>}<div className="work-map" data-view={mode} data-mobile-detail={mobileDetail}>
     <section ref={panel} className="map-panel" aria-label="Role tasks">
       <div className="map-toolbar">
         <div className="view-switch" role="group" aria-label="Task view">
@@ -247,7 +276,8 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
       {selected ? <>
       <button type="button" className="detail-back" onClick={returnToTasks}><span aria-hidden="true">‹ </span>Back to {mode === "list" ? "outline" : "map"}</button>
       <div className="detail-level"><span>{levelNames[selected.level]}</span><span className="source-reference" title="Source ID">{selected.sourceId}</span></div>
-      <h2 aria-live="polite">{selected.title}</h2>
+      <h2 tabIndex={-1} aria-live="polite">{selected.title}</h2>
+      {selected.atomic && <StepTools key={selected.id} href={selectionHref(roleHref, selected.id)}/>}
       <div className="detail-content" key={selected.id}>
       {parent && <button className="parent-task" type="button" onClick={() => showDetails(parent)} aria-label={`Back to ${parent.title}`}>
         <span aria-hidden="true">↰</span> {parent.title}
@@ -268,6 +298,17 @@ function TaskWorkspace({ tasks }: { tasks: Task[] }) {
         <p>Select a task in the {mode === "list" ? "outline" : "map"} to see how the work breaks down.</p>
       </div>}
     </aside>
+  </div></>;
+}
+
+function StepTools({ href }: { href: string }) {
+  const [status, setStatus] = useState<"idle" | "copied" | "manual">("idle");
+  return <div className="step-tools"><button className="link" onClick={async () => {
+    try { await navigator.clipboard.writeText(new URL(href, location.origin).href); setStatus("copied"); }
+    catch { setStatus("manual"); }
+  }}>Copy step link</button><SaveButton href={href} kind="step"/>
+    {status === "copied" && <span role="status">Link copied</span>}
+    {status === "manual" && <input aria-label="Step link to copy" readOnly value={new URL(href, location.origin).href} onFocus={e=>e.target.select()}/>}
   </div>;
 }
 
@@ -305,4 +346,3 @@ function TaskList({ items, expanded, selectedId, onSelect, onToggle }: ListProps
     {task.children && expanded.has(task.id) && <TaskList items={task.children} expanded={expanded} selectedId={selectedId} onSelect={onSelect} onToggle={onToggle} />}
   </li>)}</ul>;
 }
-

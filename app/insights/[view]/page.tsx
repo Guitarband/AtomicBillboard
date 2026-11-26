@@ -58,7 +58,7 @@ export default async function Research({
   const selected = options.find((r) => r.id === chosen?.id);
   return (
     <main className="intel">
-      <Link href="/">Research dashboard</Link>
+      <div className="tool-layout"><aside className="tool-directory"><Link href="/">Research dashboard</Link>
       <nav className="intel-tabs" aria-label="Research tools">
         {toolsIndex.map(([id, label]) => (
           <Link
@@ -70,7 +70,7 @@ export default async function Research({
             {label}
           </Link>
         ))}
-      </nav>
+      </nav></aside><div className="tool-sheet">
       <header className="tool-intro">
         <h1>{tool[1]}</h1>
         <p>{tool[2]}</p>
@@ -138,7 +138,7 @@ export default async function Research({
           title, department and step text. Banking outcome measures are
           suggested pilot KPIs.
         </p>
-      </details>
+      </details></div></div>
     </main>
   );
 }

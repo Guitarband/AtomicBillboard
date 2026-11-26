@@ -67,9 +67,12 @@ async function liveView({ sector, domain, role }: Trail): Promise<View> {
 }
 
 let examples: Promise<CatalogueRole[]> | undefined;
-async function sampleView({ sector, domain, role }: Trail): Promise<View> {
+export function sampleRoles() {
   examples ??= readFile(join(process.cwd(), "prisma", "sample-roles.csv"), "utf8").then(parseMasterCsv);
-  const roles = await examples;
+  return examples;
+}
+async function sampleView({ sector, domain, role }: Trail): Promise<View> {
+  const roles = await sampleRoles();
   if (!sector) {
     const sectors = [...new Set(roles.map(item => item.businessArea))].sort();
     return { kind: "choices", choices: sectors.map(name => {

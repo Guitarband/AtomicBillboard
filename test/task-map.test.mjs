@@ -50,3 +50,17 @@ test("reused source IDs produce distinct nodes within and across roles", () => {
     }
   }
 });
+
+test("step links preserve branch identity and the selected catalogue", () => {
+  const { selectionHref } = loadTypeScript("../lib/catalogue/selection.ts");
+  const href = "/?sector=Financial+services&domain=Lending+operations&role=DEMO-LEND-05&sample=1";
+  const links = tasks[0].children.map(sub => {
+    const step = sub.children[0];
+    const url = new URL(selectionHref(href, step.id), "https://example.org");
+    assert.equal(url.searchParams.get("sample"), "1");
+    assert.equal(url.searchParams.get("domain"), "Lending operations");
+    assert.equal(findTask(tasks, url.searchParams.get("node")).title, step.title);
+    return url.href;
+  });
+  assert.equal(new Set(links).size, links.length);
+});

@@ -28,13 +28,13 @@ function ChoiceArrow() {
 
 type Option = Choice & { href: string };
 
-function IndustryOption({ option }: { option: Option }) {
+export function IllustratedChoice({ title, href, illustration = title, description }: { title: string; href: string; illustration?: string; description?: string }) {
   const [hover, setHover] = useState(false);
   const [focus, setFocus] = useState(false);
-  return <Link href={option.href} prefetch={false} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+  return <Link href={href} prefetch={false} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
     onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}>
-    <IndustryArt name={option.title} active={hover || focus} />
-    <span className="industry-caption"><strong>{option.title}</strong><ChoiceArrow /></span>
+    <IndustryArt name={illustration} active={hover || focus} />
+    <span className="industry-caption"><span><strong>{title}</strong>{description && <small>{description}</small>}</span><ChoiceArrow /></span>
   </Link>;
 }
 
@@ -56,10 +56,11 @@ export function CatalogueChoices({ options, step, sector }: { options: Option[];
   if (step === 1) return <section className="choices-section" aria-labelledby="decision-title">
     <div className="choices-toolbar"><span className="choice-count">{options.length} industries</span></div>
     <ul id="catalogue-choices" className="industry-choices">{options.map(option =>
-      <li key={option.value}><IndustryOption option={option}/></li>)}</ul>
+      <li key={option.value}><IllustratedChoice title={option.title} href={option.href} description={option.detail}/></li>)}</ul>
   </section>;
   const departments = step === 2;
   const groups = groupChoices(visible, item => departments ? item.title.slice(0, 1).toUpperCase() : item.family || item.title);
+  const familySizes = new Map(groupChoices(options, item => item.family || item.title).map(([family, profiles]) => [family, profiles.length]));
   const noun = departments ? "department" : "role profile";
   const directory = <div className="catalogue-directory">
     <div className="choices-toolbar">
@@ -74,6 +75,8 @@ export function CatalogueChoices({ options, step, sector }: { options: Option[];
       <div className="department-letter" key={key}><span aria-hidden="true">{key}</span><ul>{items.map(item =>
         <li key={item.value}><Link href={item.href} prefetch={false}><strong>{item.title}</strong><small>{item.detail}</small></Link></li>)}</ul></div> :
       <details className="family-entry" key={key} name="role-families"><summary>{key}<small>{items.length} {items.length === 1 ? "profile" : "profiles"}</small></summary>
+        {(familySizes.get(key) ?? 0) > 1 && <Link prefetch={false}
+          href={"/compare" + items[0].href.slice(1).replace(/&role=[^&]*/, "") + "&family=" + encodeURIComponent(key)}>Compare grades</Link>}
         <ul>{items.map(item => <li key={item.value}><Link href={item.href} prefetch={false}><strong>{item.title}</strong>
           <small>{[item.grade && "Grade " + item.grade, item.value].filter(Boolean).join(" · ")}</small></Link>
           {item.description && <p>{item.description}</p>}</li>)}</ul></details>)}</div>

@@ -116,3 +116,13 @@
   .department-spread aside strong { padding:10px 16px; font-size:20px; }
   .family-entry a { display:grid; gap:4px; }
 }
+
+.catalogue-page {padding-top:14px}
+.catalogue-page h1 {font-size:clamp(28px,3vw,43px)}
+.decision-intro {padding:12px 0 15px}
+.decision-progress {margin-bottom:6px}
+.decision-intro>p {margin-top:6px;font-size:15px}
+.catalogue-directory {border:1px solid var(--line);border-radius:5px;background:white;padding:10px clamp(12px,2vw,24px)}
+
+.industry-caption small {display:block;font-size:13px;color:var(--report-blue);font-variant-numeric:tabular-nums;margin-top:3px}
+.department-letter small,.family-entry summary small {color:var(--report-blue);font-weight:600;font-variant-numeric:tabular-nums}

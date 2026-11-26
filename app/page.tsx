@@ -5,6 +5,8 @@ import { browseCatalogue, catalogueHref, type Trail } from "../lib/catalogue/bro
 import { roleTaskTree } from "./tasks/data";
 import { CatalogueChoices, StepFrame } from "./tasks/catalogue-choices";
 import { TaskExplorer } from "./tasks/task-explorer";
+import { SaveButton } from "./shortlist/controls";
+import "./tasks/research.css";
 import "./tasks/tasks.css";
 import "./tasks/role-index.css";
 
@@ -74,17 +76,17 @@ export default async function Home({ searchParams }: { searchParams: Promise<Par
       {role && <>
         <div className="role-heading">
           <div><h1 id="decision-title" tabIndex={-1}>{role.levelledTitle}</h1>
-            {role.gradeDescription && <p>{role.gradeDescription}</p>}
+
           </div>
-          <dl className="role-facts">
+          <details className="profile-context"><summary>Profile details</summary>{role.gradeDescription && <p>{role.gradeDescription}</p>}<dl className="role-facts">
             {role.roleFamily && <div><dt>Role family</dt><dd>{role.roleFamily}</dd></div>}
             {role.jobGrade && <div><dt>Grade</dt><dd>{role.jobGrade}</dd></div>}
             <div><dt>Role ID</dt><dd>{role.rolePackageId}</dd></div>
-          </dl>
+          </dl></details>
         </div>
         <nav className="role-tools" aria-label="Role research tools">{[["scores","Role scoring"],["impact","Model adoption"],["pay","Compare salaries"]].map(([id,label])=>
-          <Link key={id} href={"/insights/"+id+"?"+new URLSearchParams({role:role.rolePackageId,...(sample?{sample:"1"}:{})})}>{label} ↗</Link>)}</nav>
-        <TaskExplorer key={role.rolePackageId} tasks={roleTaskTree(role)} />
+          <Link key={id} href={"/insights/"+id+"?"+new URLSearchParams({role:role.rolePackageId,...(sample?{sample:"1"}:{})})}>{label} ↗</Link>)}<SaveButton href={signature} kind="role"/></nav>
+        <TaskExplorer key={role.rolePackageId} initialNode={typeof params.node === "string" ? params.node : undefined} roleHref={signature} tasks={roleTaskTree(role)} />
       </>}
     </StepFrame>
   </main>;

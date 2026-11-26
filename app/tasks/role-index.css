@@ -83,3 +83,23 @@ body:has(.role-page) { background: #faf9f5; }
   .role-page .atomic-fields dt { margin-bottom: 4px; }
 }
 
+
+.role-page .role-heading {display:block;padding:9px 0}
+.role-page .role-heading h1 {font-size:clamp(28px,3vw,44px)}
+.profile-context {margin-top:5px;font-size:14px;color:var(--muted)}
+.profile-context summary {cursor:pointer;width:fit-content}
+.profile-context p {margin:6px 0}
+.profile-context .role-facts {max-width:440px}
+.role-page .role-tools {display:flex;align-items:center;flex-wrap:wrap;gap:5px 16px;padding:6px 0 10px;font-size:14px}
+.role-page .index-heading {padding:7px 12px;background:#eaf0e6;border:1px solid var(--rule)}
+.role-page .index-heading h2 {font-size:24px}
+
+.role-page .index-heading {background:var(--report-ink);border-color:var(--report-ink);color:white;border-radius:4px 4px 0 0;padding:10px 15px}
+.role-page .index-heading h2 {color:white;font-size:22px}
+.task-measures {display:flex;flex-wrap:wrap;gap:6px 18px;margin:0}
+.task-measures div {display:flex;align-items:baseline;gap:5px;color:#dde7ef}
+.task-measures dt {font-size:13px}
+.task-measures dd {margin:0;order:-1;color:white;font-size:21px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.role-page .detail-level {color:var(--report-blue)}
+.role-page .map-panel {background:#edf1f3}
+.role-page .list-title[aria-pressed="true"] {background:#dce7ed;box-shadow:inset 3px 0 var(--report-blue);color:var(--report-ink)}
